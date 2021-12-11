@@ -50,7 +50,7 @@ class_diag <- function(score, truth, positive, cutoff=.5){
 
 ### Introduction 
 
-Paragraph or two introducing your datasets and variables, why they are interesting to you, etc. See instructions for more information
+My dataset consists of data collected from incidents of heart failures at hospitals. The variables included in this dataset are age, anaemia, creatinine_phosphokinase, diabetes, ejection_fraction, high_blood_pressure, platelets, serum_creatinine, serum_sodium, sex, smoking, time, and DEATH_EVENT. I found this data on kaggle.com. My variables are measuring certian statuses and data collected by the hospitals of the patients that had an incident of heart failure. Age marks the age of the patient. Anaemia marks whether or not the patient had a deficiency in red blood cells. Creatinine_phosphokinase, serum_creatinine, aand serum_sodium are variables that measure how much of their respective chemicals are in the patient's bloodstream. Ejection fraction measures the amount of blood leaving the heart. Diabetes marks whether or not the patient has diabetes. High_blood_pressure marks whether or not the patient has high blood pressure. Platelets measures the platelet count of the patient. Sex marks the sex of the patient. Smoking marks whether or not the patient is a smoker. Time measures the follow-up period. DEATH_EVENT marks whether or not this heart failure was fatal. I found this data particularly interesting as it has a lot to do with a particular field that I am interested in pursuing a career in one day; cardiology. There are approximately 299 observations of all 13 variables. 
 
 ```{R}
 library(tidyverse)
@@ -205,10 +205,19 @@ Discussion
 
 ```{R}
 library(reticulate)
+
+math <- 59
 ```
 
 ```{python}
 # python code here
+math = 58
+print(r.math + math)
+```
+
+```{R}
+sum <- sum(math, py$math)
+sum
 ```
 
 Discussion
