@@ -46,7 +46,7 @@ class_diag <- function(score, truth, positive, cutoff=.5){
 
 # Mining, Classification, Prediction
 
-## Name and EID here
+## Mohamed Bettayeb, mb58422
 
 ### Introduction 
 
@@ -54,8 +54,11 @@ Paragraph or two introducing your datasets and variables, why they are interesti
 
 ```{R}
 library(tidyverse)
+library(dplyr)
+library(readr)
+library(gt)
 # read your datasets in here, e.g., with read_csv()
-
+heart_failure <- read_csv("heart_failure_clinical_records_dataset.csv")
 # if your dataset needs tidying, do so here
 
 # any other code here
@@ -65,7 +68,19 @@ library(tidyverse)
 
 ```{R}
 library(cluster)
-# clustering code here
+library(ggplot2)
+library(GGally)
+pam_data <-heart_failure %>% select(age, creatinine_phosphokinase, ejection_fraction, platelets, serum_creatinine, serum_sodium, time)
+sil_width <- vector()
+for (i in 2:10){
+  pam_fit <- pam(pam_data, k = i)
+  sil_width[i] <- pam_fit$silinfo$avg.width
+}
+ggplot() + geom_line(aes(x=1:10, y=sil_width)) + scale_x_continuous(name="k", breaks=1:10)
+# 9 is the ideal k
+pam1 <- heart_failure %>% select(age, creatinine_phosphokinase, ejection_fraction, platelets, serum_creatinine, serum_sodium, time) %>% pam(k=9)
+pamclust <- heart_failure %>% select(age, creatinine_phosphokinase, ejection_fraction, platelets, serum_creatinine, serum_sodium, time) %>% mutate(cluster=as.factor(pam1$clustering))
+ggpairs(pamclust, columns = 1:7,aes(color=cluster))
 ```
 
 Discussion of clustering here
@@ -75,6 +90,14 @@ Discussion of clustering here
 
 ```{R}
 # PCA code here
+h1 <- heart_failure %>% select(age, creatinine_phosphokinase, ejection_fraction, platelets, serum_creatinine, serum_sodium, time)
+heartnums <- h1 %>% select_if(is.numeric) %>% scale
+heartpca <- princomp(heartnums)
+names(heartpca)
+eigval <- heartpca$sdev^2
+round(cumsum(eigval)/sum(eigval), 2)
+heartdf <- data.frame(PC1 = heartpca$scores[,1], PC2 = heartpca$scores[,2])
+ggplot(heartdf, aes(PC1, PC2)) + geom_point()
 ```
 
 Discussions of PCA here. 
@@ -83,6 +106,10 @@ Discussions of PCA here.
 
 ```{R}
 # linear classifier code here
+fit <- glm(anaemia ~ age + creatinine_phosphokinase + ejection_fraction + platelets + serum_creatinine + serum_sodium + time, data = heart_failure, family= "binomial")
+score <- predict(fit, type="response")
+class_diag(score, heart_failure$anaemia, positive = 1)
+table(predict=as.numeric(score >.5),truth=heart_failure$anaemia)%>%addmargins
 ```
 
 ```{R}
