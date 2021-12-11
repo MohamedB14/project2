@@ -114,6 +114,23 @@ table(predict=as.numeric(score >.5),truth=heart_failure$anaemia)%>%addmargins
 
 ```{R}
 # cross-validation of linear classifier here
+set.seed(1234)
+k=10 #choose number of folds
+heartdata<-heart_failure[sample(nrow(heart_failure)),] #randomly order rows
+folds<-cut(seq(1:nrow(heart_failure)),breaks=k,labels=F) #create 10 folds
+diags<-NULL
+for(i in 1:k){
+  ## Create training and test sets
+  train<-heartdata[folds!=i,] 
+  test<-heartdata[folds==i,]
+  truth<-test$anaemia
+  ## Train model on training set
+  fit<-glm(anaemia~.,data=train,family="binomial")
+  probs<-predict(fit,newdata = test,type="response")
+  ## Test model on test set (save all k results)
+  diags<-rbind(diags,class_diag(probs,truth, positive=1))
+}
+summarize_all(diags,mean)
 ```
 
 Discussion here
@@ -122,11 +139,32 @@ Discussion here
 
 ```{R}
 library(caret)
-# non-parametric classifier code here
+knn_fit <- knn3(factor(anaemia==1,levels=c("TRUE","FALSE")) ~., data=heart_failure, k=5)
+y_hat_knn <- predict(knn_fit,heart_failure)
+class_diag(y_hat_knn[,1],heart_failure$anaemia, positive=1)
+table(predicted=as.numeric(y_hat_knn[,1] >.5),actual=heart_failure$anaemia)%>%addmargins
+
 ```
 
 ```{R}
 # cross-validation of np classifier here
+set.seed(1234)
+k=5 #choose number of folds
+cvdata<-heart_failure %>% sample_frac() #randomly order rows
+folds<-cut(seq(1:nrow(heart_failure)),breaks=k,labels=F) #create folds
+diags<-NULL
+for(i in 1:k){
+  cvtrain<-cvdata[folds!=i,]
+  cvtest<-cvdata[folds==i,]
+  ## Fit linear regression model to training set
+  cvfit<-knnreg(anaemia~.,data=cvtrain)
+  ## Get predictions/y-hats on test set (fold i)
+  cvyhat<-predict(cvfit,newdata=cvtest)
+  ## Compute prediction error  (MSE) for fold i
+  cvdiags<-mean((cvtest$anaemia-cvyhat)^2) 
+}
+mean(cvdiags) ## get average MSE across all folds (much higher error)!
+
 ```
 
 Discussion

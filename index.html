@@ -320,14 +320,60 @@ class_diag(score, heart_failure$anaemia, positive = 1)</code></pre>
 ##     0   127  73 200
 ##     1    43  56  99
 ##     Sum 170 129 299</code></pre>
-<pre class="r"><code># cross-validation of linear classifier here</code></pre>
+<pre class="r"><code># cross-validation of linear classifier here
+set.seed(1234)
+k=10 #choose number of folds
+heartdata&lt;-heart_failure[sample(nrow(heart_failure)),] #randomly order rows
+folds&lt;-cut(seq(1:nrow(heart_failure)),breaks=k,labels=F) #create 10 folds
+diags&lt;-NULL
+for(i in 1:k){
+  ## Create training and test sets
+  train&lt;-heartdata[folds!=i,] 
+  test&lt;-heartdata[folds==i,]
+  truth&lt;-test$anaemia
+  ## Train model on training set
+  fit&lt;-glm(anaemia~.,data=train,family=&quot;binomial&quot;)
+  probs&lt;-predict(fit,newdata = test,type=&quot;response&quot;)
+  ## Test model on test set (save all k results)
+  diags&lt;-rbind(diags,class_diag(probs,truth, positive=1))
+}
+summarize_all(diags,mean)</code></pre>
+<pre><code>##       acc    sens    spec     ppv      f1     ba     auc
+## 1 0.56137 0.37937 0.70042 0.50458 0.42318 0.5399 0.55897</code></pre>
 <p>Discussion here</p>
 </div>
 <div id="non-parametric-classifier" class="section level3">
 <h3>Non-Parametric Classifier</h3>
 <pre class="r"><code>library(caret)
-# non-parametric classifier code here</code></pre>
-<pre class="r"><code># cross-validation of np classifier here</code></pre>
+knn_fit &lt;- knn3(factor(anaemia==1,levels=c(&quot;TRUE&quot;,&quot;FALSE&quot;)) ~., data=heart_failure, k=5)
+y_hat_knn &lt;- predict(knn_fit,heart_failure)
+class_diag(y_hat_knn[,1],heart_failure$anaemia, positive=1)</code></pre>
+<pre><code>##            acc   sens   spec    ppv    f1     ba    auc
+## Metrics 0.6856 0.5969 0.7529 0.6471 0.621 0.6749 0.7636</code></pre>
+<pre class="r"><code>table(predicted=as.numeric(y_hat_knn[,1] &gt;.5),actual=heart_failure$anaemia)%&gt;%addmargins</code></pre>
+<pre><code>##          actual
+## predicted   0   1 Sum
+##       0   128  52 180
+##       1    42  77 119
+##       Sum 170 129 299</code></pre>
+<pre class="r"><code># cross-validation of np classifier here
+set.seed(1234)
+k=5 #choose number of folds
+cvdata&lt;-heart_failure %&gt;% sample_frac() #randomly order rows
+folds&lt;-cut(seq(1:nrow(heart_failure)),breaks=k,labels=F) #create folds
+diags&lt;-NULL
+for(i in 1:k){
+  cvtrain&lt;-cvdata[folds!=i,]
+  cvtest&lt;-cvdata[folds==i,]
+  ## Fit linear regression model to training set
+  cvfit&lt;-knnreg(anaemia~.,data=cvtrain)
+  ## Get predictions/y-hats on test set (fold i)
+  cvyhat&lt;-predict(cvfit,newdata=cvtest)
+  ## Compute prediction error  (MSE) for fold i
+  cvdiags&lt;-mean((cvtest$anaemia-cvyhat)^2) 
+}
+mean(cvdiags) ## get average MSE across all folds (much higher error)!</code></pre>
+<pre><code>## [1] 0.3028333</code></pre>
 <p>Discussion</p>
 </div>
 <div id="regressionnumeric-prediction" class="section level3">
