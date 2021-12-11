@@ -174,10 +174,29 @@ Discussion
 
 ```{R}
 # regression model code here
+lrfit<-lm(age~.,data=heart_failure) #predict mpg from all other variables
+lryhat<-predict(lrfit) #predicted mpg
+mean((heart_failure$age-lryhat)^2)
 ```
 
 ```{R}
 # cross-validation of regression model here
+set.seed(1234)
+k=5 #choose number of folds
+lcvdata<-heart_failure[sample(nrow(heart_failure)),] #randomly order rows
+lcvfolds<-cut(seq(1:nrow(heart_failure)),breaks=k,labels=F) #create folds
+diags<-NULL
+for(i in 1:k){
+  lcvtrain<-lcvdata[lcvfolds!=i,]
+  lcvtest<-lcvdata[lcvfolds==i,]
+  ## Fit linear regression model to training set
+  lcvfit<-lm(age~.,data=lcvtrain)
+  ## Get predictions/y-hats on test set (fold i)
+  lcvyhat<-predict(fit,newdata=lcvtest)
+  ## Compute prediction error  (MSE) for fold i
+  lcvdiags<-mean((test$age-lcvyhat)^2) 
+}
+mean(lcvdiags) ## get average MSE across all folds (much higher error)!
 ```
 
 Discussion

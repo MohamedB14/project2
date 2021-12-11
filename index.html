@@ -378,8 +378,29 @@ mean(cvdiags) ## get average MSE across all folds (much higher error)!</code></p
 </div>
 <div id="regressionnumeric-prediction" class="section level3">
 <h3>Regression/Numeric Prediction</h3>
-<pre class="r"><code># regression model code here</code></pre>
-<pre class="r"><code># cross-validation of regression model here</code></pre>
+<pre class="r"><code># regression model code here
+lrfit&lt;-lm(age~.,data=heart_failure) #predict mpg from all other variables
+lryhat&lt;-predict(lrfit) #predicted mpg
+mean((heart_failure$age-lryhat)^2)</code></pre>
+<pre><code>## [1] 123.3761</code></pre>
+<pre class="r"><code># cross-validation of regression model here
+set.seed(1234)
+k=5 #choose number of folds
+lcvdata&lt;-heart_failure[sample(nrow(heart_failure)),] #randomly order rows
+lcvfolds&lt;-cut(seq(1:nrow(heart_failure)),breaks=k,labels=F) #create folds
+diags&lt;-NULL
+for(i in 1:k){
+  lcvtrain&lt;-lcvdata[lcvfolds!=i,]
+  lcvtest&lt;-lcvdata[lcvfolds==i,]
+  ## Fit linear regression model to training set
+  lcvfit&lt;-lm(age~.,data=lcvtrain)
+  ## Get predictions/y-hats on test set (fold i)
+  lcvyhat&lt;-predict(fit,newdata=lcvtest)
+  ## Compute prediction error  (MSE) for fold i
+  lcvdiags&lt;-mean((test$age-lcvyhat)^2) 
+}
+mean(lcvdiags) ## get average MSE across all folds (much higher error)!</code></pre>
+<pre><code>## [1] 3780.581</code></pre>
 <p>Discussion</p>
 </div>
 <div id="python" class="section level3">
