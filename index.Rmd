@@ -76,14 +76,22 @@ for (i in 2:10){
   pam_fit <- pam(pam_data, k = i)
   sil_width[i] <- pam_fit$silinfo$avg.width
 }
+pam_fit <- pam(pam_data, k = 9)
+pam_fit$silinfo$avg.width
 ggplot() + geom_line(aes(x=1:10, y=sil_width)) + scale_x_continuous(name="k", breaks=1:10)
 # 9 is the ideal k
 pam1 <- heart_failure %>% select(age, creatinine_phosphokinase, ejection_fraction, platelets, serum_creatinine, serum_sodium, time) %>% pam(k=9)
 pamclust <- heart_failure %>% select(age, creatinine_phosphokinase, ejection_fraction, platelets, serum_creatinine, serum_sodium, time) %>% mutate(cluster=as.factor(pam1$clustering))
 ggpairs(pamclust, columns = 1:7,aes(color=cluster))
+pamclust %>% group_by(cluster) %>% summarize_if(is.numeric, 
+    mean, na.rm = T)
+
+
 ```
 
-Discussion of clustering here
+The ggplot suggested 9 clusters for this dataset. The average silhouette width for this cluster bunch is 0.592498 indicating that this is a reasonable structure. Prior to performing the PAM function, the numeric variables of the Presidents data set were isolated, using the select() function and the following variables were selected for: age, creatinine_phosphokinase, ejection_fraction, platelets, serum_creatinine, serum_sodium, and time. 
+
+While the cluster bunch indicates that this is a reasonable structure, the ggpairs plot is still a relatively difficult one to interpret. Moreover, due to the number of clusters and their similarities, it is rather difficut to differentiate between them.
     
     
 ### Dimensionality Reduction with PCA
@@ -96,11 +104,12 @@ heartpca <- princomp(heartnums)
 names(heartpca)
 eigval <- heartpca$sdev^2
 round(cumsum(eigval)/sum(eigval), 2)
-heartdf <- data.frame(PC1 = heartpca$scores[,1], PC2 = heartpca$scores[,2])
-ggplot(heartdf, aes(PC1, PC2)) + geom_point()
+heartdf <- data.frame(PC1 = heartpca$scores[,1], PC2 = heartpca$scores[,2], PC3= heartpca$scores[,3],PC4 = heartpca$scores[,4], PC5 = heartpca$scores[,5])
+ggpairs(heartdf, columns = 1:5)
+summary(heartpca, loadings = T)
 ```
 
-Discussions of PCA here. 
+Based on the comps, it was found that the five PCs make up for about 80% of the variance. The summary above indicates that for PC1, every loading was negative except for age and serum creatinine. PC2 had only creatinine phosphokinase and time as the negative loading. PC3 had two positive loadings, time and ejection fraction. PC4 had 3 positive loadings: age, creatinine phosphokinase, and serum sodium. PC5 had 3 positive loadings: age, platelets, and serum sodium. While there doesn't seem to be a strong correlation with any of these loadings, it was rather interesting that age was always positive and that time was always negative. This would make sense, as the older someone is, the more urgent their follow up period would likely be.
 
 ###  Linear Classifier
 
@@ -133,7 +142,7 @@ for(i in 1:k){
 summarize_all(diags,mean)
 ```
 
-Discussion here
+The CV AUV indicates that this model is bad at predicting new observations with an AUC of 0.55897. There are signs of overfitting in this model, as the AUC of the initial linear regression is 0.6489, which is significantly higher than that of the CV AUC.
 
 ### Non-Parametric Classifier
 
@@ -167,7 +176,7 @@ mean(cvdiags) ## get average MSE across all folds (much higher error)!
 
 ```
 
-Discussion
+The CV MSE indicates that this model is overfitting as it is quite low at 0.3028333. furthermore, the AUC of the model indicates that this model is fair at predicting new observations at 0.7636.
 
 
 ### Regression/Numeric Prediction
@@ -199,7 +208,7 @@ for(i in 1:k){
 mean(lcvdiags) ## get average MSE across all folds (much higher error)!
 ```
 
-Discussion
+This model does show signs of overfitting as the CV MSE is much higher than the model error. The model error is 123.3761, while the MSE is 3780.581, which makes the MSE more than 10x times larger in the CV, indicating overfitting.
 
 ### Python 
 
@@ -220,11 +229,11 @@ sum <- sum(math, py$math)
 sum
 ```
 
-Discussion
+I stored the number 59 into a variable named "math" in the r code chunk, I then stored a number of 58 in a variable of the same name in the python chunk. I then utilized reticulate to access the r code math variable in the python chunk and then added the two and printed the sum. Utilizing reticulate again, I did a similar thing in the r code chunk, except this time accessing the python math variable and printing the sum.
 
 ### Concluding Remarks
 
-Include concluding remarks here, if any
+
 
 
 
